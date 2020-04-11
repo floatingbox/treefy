@@ -1,7 +1,7 @@
-use std::io;
-use std::path::{Path, Component};
 use std::collections::BTreeMap;
 use std::ffi::OsString;
+use std::io;
+use std::path::{Component, Path};
 
 enum Tree {
     Dir(BTreeMap<OsString, Tree>),
