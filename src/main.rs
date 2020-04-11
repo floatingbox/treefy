@@ -8,14 +8,12 @@ enum Tree {
     File(OsString),
 }
 
-fn print_prefix(is_last: &Vec<bool>) {
+fn print_prefix(is_last: &[bool]) {
     let mut prefixes = Vec::new();
     prefixes.reserve(is_last.len());
 
-    let mut i = 0;
-    for il in is_last.iter().rev() {
-        i += 1;
-        if i == 1 {
+    for (i, il) in is_last.iter().rev().enumerate() {
+        if i == 0 {
             prefixes.push(if *il { "└── " } else { "├── " });
         } else {
             prefixes.push(if *il { "    " } else { "│   " });
@@ -37,27 +35,23 @@ impl Tree {
             let root = components.pop().unwrap();
             if let Some(subtree) = map.get_mut(root.as_os_str()) {
                 subtree.insert(components, is_dir);
+            } else if components.is_empty() && !is_dir {
+                let file = Tree::File(root.as_os_str().to_owned());
+                map.insert(root.as_os_str().to_owned(), file);
             } else {
-                if components.is_empty() && !is_dir {
-                    let file = Tree::File(root.as_os_str().to_owned());
-                    map.insert(root.as_os_str().to_owned(), file);
-                } else {
-                    let mut subtree = Tree::Dir(BTreeMap::new());
-                    subtree.insert(components, is_dir);
-                    map.insert(root.as_os_str().to_owned(), subtree);
-                };
-            }
+                let mut subtree = Tree::Dir(BTreeMap::new());
+                subtree.insert(components, is_dir);
+                map.insert(root.as_os_str().to_owned(), subtree);
+            };
         }
     }
 
     fn print(&self, is_last: &mut Vec<bool>) {
         match self {
             Self::Dir(map) => {
-                let mut i = 0;
-                for (path, subtree) in map {
-                    i += 1;
+                for (i, (path, subtree)) in map.iter().enumerate() {
                     let mut is_last = is_last.clone();
-                    is_last.push(i == map.len());
+                    is_last.push(i + 1 == map.len());
                     print_prefix(&is_last);
                     println!("{}", path.to_str().unwrap());
                     if let Self::Dir(_) = subtree {
